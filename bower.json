@@ -1,0 +1,26 @@
+{
+  "name": "chartviz",
+  "version": "v0.0.1",
+  "homepage": "https://github.com/donpir/chartviz",
+  "authors": [
+    "'Donato Pirozzi <'donatopirozzi@gmail.com'>"
+  ],
+  "license": "GPL",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "demo"
+  ],
+  "dependencies": {
+    "csvjson": "v0.1.0",
+    "jsdatachecker": "v0.0.1",
+    "paper-item": "PolymerElements/paper-item#~1.1.4",
+    "paper-listbox": "polymerelements/paper-listbox#~1.1.2",
+    "paper-progress": "PolymerElements/paper-progress#~1.0.9",
+    "paper-tooltip": "PolymerElements/paper-tooltip#~1.1.2",
+    "polymer": "Polymer/polymer#~1.4.0"
+  }
+}

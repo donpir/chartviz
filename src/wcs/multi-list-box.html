@@ -1,0 +1,53 @@
+<!-- POLYMER Library -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
+
+<dom-module id="multi-list-box">
+    <template>
+        <paper-listbox id="listboxOfFields" class="multilist" multi>
+            <!--<paper-item class="fancy">Item 1</paper-item>
+            <paper-item class="fancy">Item 2</paper-item>-->
+
+            <template is="dom-repeat" items="{{fields}}">
+                <paper-item id="{{item.id}}">{{item.name}}</paper-item>
+                <paper-tooltip for="{{item.id}}" offset="2" animation-delay="0">{{item.description}}</paper-tooltip>
+            </template>
+
+        </paper-listbox>
+
+        <style is="custom-style">
+            paper-listbox.multilist {
+                width: 100px;
+            }
+
+            paper-listbox.multilist paper-item {
+                --paper-item-focused: {
+                     /*background: var(--paper-amber-500);*/
+                     /*font-weight: bold;*/
+                 };
+                --paper-item-focused-before: {
+                     opacity: 0;
+                 };
+                --paper-item-selected: {
+                     background: var(--paper-amber-500);
+                 };
+            }
+        </style>
+    </template>
+    <script>
+        Polymer({
+            is: "multi-list-box",
+
+            properties: {
+                fields: { type: Array, value: function() {
+                    return [ {id: "itm1", name: "age", description: "The user age"},
+                             {id: "itm2", name: "weight", description: "The user weight" } ];
+                }}
+            }
+
+        });
+
+    </script>
+</dom-module>
