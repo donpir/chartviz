@@ -49,21 +49,12 @@
 
     <br/>
 
-
-
-
     <table border="0">
     <tr>
         <td>Data homogeneity:</td>
         <td><paper-progress id="barHomogeneity" value="0">sbiricuda</paper-progress></td>
         <td id="barHomogeneityValue"></td>
     </tr>
-
-    <!--<tr>
-        <td>Dataset Not Null Values:</td>
-        <td><paper-progress id="barNotNull" value="0">sbiricuda</paper-progress></td>
-        <td id="barNotNullValues"></td>
-    </tr>-->
 
     <tr>
         <td>Dataset Consistent Values:</td>
@@ -135,15 +126,6 @@
             var processingResult = _converter.inferJsonDataType(jsonDataset, path);
             var types = processingResult.types;
 
-            //Create the header table.
-            /*var trHeader = document.getElementById('trHeader');
-            ArrayUtils.IteratorOverKeys(types, function(field) {
-                var ntd = document.createElement("th");
-                ntd.innerHTML = field.name;
-                trHeader.appendChild(ntd);
-            });*/
-
-
             //LIST-BOX Of Fields: fills the list with the dataset field names.
             var arrFields = [];
             ArrayUtils.IteratorOverKeys(types, function(field) {
@@ -159,28 +141,33 @@
             wcFieldsList.fields = arrFields;
 
             //TABLE OF DATA: every time the user clicks on an item, it updates the table.
+            var _this = this;
             var wcDataTable = document.querySelector('#dataTable');
             wcFieldsList.addEventListener('selected-item', function(evt) {
-                console.log("event");
                 var _headers = [];
                 var _fields = [];
+                var _dataset = jsonDataset;
 
-                evt.detail.fields.forEach(function(field) {
+                /*evt.detail.fields.forEach(function(field) {
                     var hasSelectedField = field.hasOwnProperty('selected');
-                    console.log(hasSelectedField);
-                    if (hasSelectedField && field.selected == true)
+                    if (hasSelectedField && field.selected == true) {
                         _headers.push(field.name);
+                        _fields.push(field.name)
+                    }
+                });*/
+
+                evt.detail.selectedFields.forEach(function(field) {
+                    _headers.push(field.name);
+                    _fields.push(field.name)
                 });
                 wcDataTable.headers = _headers;
+                wcDataTable.headers = _fields;
+
+                //Extract the data and creates the data structure for the data table.
+                //debugger;
             });
 
-            /*var trHeaderType = document.getElementById('trHeaderType');
-            ArrayUtils.IteratorOverKeys(types, function(field){
-                var ntd = document.createElement("th");
-                ntd.innerHTML = field.type + " (" + Math.round(field.typeConfidence * 100 * 100) / 100 + "%)";
-                trHeaderType.appendChild(ntd);
-            });*/
-
+            //PROGRESS BAR.
             var processingResults = _converter.convert(processingResult);
 
             var percentage = processingResult.qualityIndex.homogeneity*100;

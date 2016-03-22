@@ -1,9 +1,44 @@
+<!--
+
+ This file is part of POLYWC a set of Custom Polymer Web-Components.
+
+ POLYWC is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ POLYWC is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with POLYWC. If not, see <http://www.gnu.org/licenses/>.
+
+ Copyright (C) 2016 POLYWC - Donato Pirozzi (donatopirozzi@gmail.com)
+ Distributed under the GNU GPL v3. For full terms see the file LICENSE.
+ License: http://www.gnu.org/licenses/gpl.html GPL version 3 or higher
+
+-->
+
 <!-- POLYMER Library -->
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
 
+<!--
+
+ webcomp-multi-list-box
+
+    Usage:
+
+
+    Remember for the documentation:
+
+        - it stores the sequence of selected fields in the order selected by the user.
+
+-->
 <dom-module id="multi-list-box">
     <template>
         <paper-listbox id="listboxOfFields" class="multilist" multi>
@@ -26,13 +61,17 @@
                      /*font-weight: bold;*/
                  };
                 --paper-item-focused-before: {
-                     opacity: 0;
+                    opacity: 0;
                  };
                 --paper-item-selected: {
                      background: var(--paper-amber-500);
                  };
                 --paper-item-min-height: 12px;
                 cursor: pointer;
+            }
+
+            paper-listbox.multilist paper-item:hover {
+                background: var(--paper-amber-100);
             }
         </style>
     </template>
@@ -41,7 +80,8 @@
             is: "multi-list-box",
 
             properties: {
-                fields: { type: Array, value: [], notify: true}
+                fields: { type: Array, value: [], notify: true},
+                selectedFields: { type: Array, value: [] }
             },
 
             listeners: {
@@ -53,7 +93,22 @@
                 var idx = evt.detail.item.index;
                 var hasSelectedKey = this.fields[idx].hasOwnProperty('selected'); //'selected' in this.fields[idx];
                 this.fields[idx].selected = hasSelectedKey ? !this.fields[idx].selected : true;
-                this.fire('selected-item', { fields: this.fields });
+
+                //TODO: check whether the field has a property 'id'.
+
+                if (this.fields[idx].selected) //Add the field to the selected fields.
+                    this.selectedFields.push(this.fields[idx]);
+                else {
+                    //It removes the item from the array.
+                    var removeIndex = -1;
+                    for (var i=0; i<this.selectedFields.length; i++)
+                        if (this.selectedFields[i].id == this.fields[idx].id)
+                            removeIndex = i;
+                    if (removeIndex >= 0)
+                        this.selectedFields.splice(removeIndex, 1);
+                }
+
+                this.fire('selected-item', { fields: this.fields, selectedFields: this.selectedFields });
             }
 
         });
