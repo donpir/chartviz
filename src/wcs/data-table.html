@@ -1,0 +1,203 @@
+<!--
+  -- data-table v0.3 2016-03-22
+  -->
+
+
+<!-- Polymer libraries -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<!-- JQuery -->
+<script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="utils.js"></script>
+
+<!-- Semantic UI -->
+<link rel="stylesheet" type="text/css" href="../../bower_components/semantic/dist/semantic.css">
+<script src="../../bower_components/semantic/dist/semantic.min.js"></script>
+
+<!-- Include CUSTOM Web Components -->
+<link rel="import" href="data-table-pager.html">
+
+<!-- WEB COMPONENT -->
+<dom-module is="data-table">
+    <template>
+        <!-- <iron-ajax auto url="{{dataUrl}}" handle-as="json" last-response="{{response}}"></iron-ajax>-->
+
+        <table class="ui compact celled striped table">
+            <thead id="tblheader">
+                <tr>
+                	<template is="dom-if" if="{{showControls}}">
+                    	<th id="tblheadercheckboxes"></th>
+                    </template>
+                    <template is="dom-repeat" items="{{headers}}">
+                        <th>{{item}}</th>
+                    </template>
+                    <th id="tblheaderoptions">
+                    	<template is="dom-if" if="{{showPager}}">
+                        <data-table-pager id="topPager" tot-items="7"></data-table-pager>
+                        </template>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tblbody">
+                <template is="dom-repeat" items="{{response.data}}" as="dataRow">
+                <tr id="{{dataRow.id}}">
+                	<template is="dom-if" if="{{showControls}}">
+                    <td><paper-checkbox id="{{dataRow.id}}" on-change="handleCheck"></paper-checkbox></td>
+                    </template>
+                    <template is="dom-repeat" items="{{fields}}" as="fieldKey">
+                    <td>{{computeFieldValue(dataRow, fieldKey)}}</td>
+                    </template>
+                    
+                    <td class="colCenter">
+                    	<template is="dom-if" if="{{showControls}}">
+                        <a href="{{ computeComposeUrl(serviceEditUrl, 'id', dataRow.id) }}">Edit</a>
+                        <paper-icon-button id="edit_{{dataRow.id}}" icon="editor:mode-edit" on-click="handleEdit"></paper-icon-button>
+                        <paper-icon-button id="delete_{{dataRow.id}}" icon="icons:delete" on-click="handleDelete"></paper-icon-button>
+                        </template>
+                        
+                        <template is="dom-if" if="showCtrlView">
+                        <paper-icon-button id="details_{{computeFieldValue(dataRow, fieldId)}}" icon="icons:visibility" on-click="handleViewDetails"></paper-icon-button>
+                        </template>
+                    </td>
+                    
+                </tr>
+                </template>
+            </tbody>
+            <template is="dom-if" if="{{showControls}}">
+            <tfoot id="tblfoot">
+            <tr>
+                <th colspan="100%">
+                    <div id="tblfooter">
+                        <div id="tblfootercaption"></div>
+                        <div class="flexchild right">
+                            <paper-fab mini icon="icons:delete" on-click="handleDeleteClick" style="display: none;"></paper-fab>
+                            <data-table-pager id="bottomPager" show-page-label tot-items="7"></data-table-pager>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+            </tfoot>
+            </template>
+        </table>
+
+    </template>
+    <style>
+
+        #tblheadercheckboxes { width: 8px; }
+        #tblheaderoptions { width: 16px; }
+
+        paper-icon-button {
+            height: 24px;
+            width: 24px;
+            padding: 2px 2px 2px 2px;
+            margin: 0px 0px 0px 0px;
+        }
+
+        #tblfootercontrols {
+            text-align: right;
+        }
+
+        paper-fab {
+            display: inline-flex;
+        }
+
+        .colCenter { text-align: center; }
+        .right { text-align: right; }
+
+        .tblrowselected { background-color: lightyellow; }
+
+        #tblfooter {
+            @apply(--layout-horizontal);
+        }
+        .flexchild {
+            @apply(--layout-flex);
+        }
+
+    </style>
+    <script>
+        Polymer({
+            is: "data-table",
+            properties: {
+                headers:            { type: Array, value: undefined },
+                fieldId:            { type: String },
+                fields:             { type: Array, value: undefined },
+                dataUrl:            { type: String, value: undefined },
+                serviceEditUrl:     { type: String, value: undefined },
+                _numSelectedItems:  { type: Number, value: 0 },
+                
+                response: 			{ type: Object, value: undefined, notify: true, observer: 'handleResponseChange' },
+                
+                showControls: 		{ type: Boolean, value: false },
+                showPager: 			{ type: Boolean, value: false },
+                showCtrlView:		{ type: Boolean, value: false }
+            },
+            
+            /*ready: function () {
+                Object.observe(this.response, function(change) {           
+                  console.log(change); // What change
+                });
+              },*/
+            
+            observe: {
+            	'response.data': 'handleResponseChange'
+            },
+
+            computeFieldValue: function(dataRow, fieldKey) {
+            	var value = dataRow[fieldKey];
+                return value;
+            },
+
+            computeComposeUrl: function(baseUrl, paramName, paramValue) {
+                return replaceUrlParam(baseUrl, paramName, paramValue);
+            },
+
+            listeners: {
+                'data-table-pager-go-to-event': 'goToPage'
+            },
+
+            handleResponseChange: function() {
+            	console.log("ciao");	
+            },
+            
+            handleCheck: function(evt) {
+                var _id = evt.target.id;
+                var _checked = evt.target.checked;
+
+                this._numSelectedItems += _checked ? 1 : -1 ;
+                Polymer.dom(this.$.tblfootercaption).innerHTML = this._numSelectedItems > 0 ? this._numSelectedItems + " selezionati." : "";
+
+                var _selectedRow = Polymer.dom(this.$.tblbody).querySelector("tr[id='" + _id + "']");
+                _checked ?  _selectedRow.classList.add('tblrowselected') : _selectedRow.classList.remove('tblrowselected');
+            },
+            
+            goToPage: function(evt, targetPage) {
+                this.dataUrl = replaceUrlParam(this.dataUrl, "page", targetPage);
+                this.$.topPager.curPage = targetPage;
+                this.$.bottomPager.curPage = targetPage;
+                this.$._numSelectedItems = 0;
+            },
+
+            handleEdit: function(evt) {
+                var _id = evt.currentTarget.id;
+                this.fire('data-table-edit-item', _id );
+            },
+
+            handleDelete: function(evt) {
+                var _id = evt.currentTarget.id;
+                this.fire('data-table-delete-item', _id );
+            },
+            
+            handleViewDetails: function(evt) {
+            	var _id = evt.currentTarget.id;
+            	this.fire('data-table-view-item-details', _id );
+            }
+            
+
+        });//#POLYMER.
+    </script>
+</dom-module>

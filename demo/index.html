@@ -17,9 +17,11 @@
     <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
     <link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
     <link rel="import" href="../bower_components/paper-item/paper-item.html">
+    <link rel="import" href="../bower_components/paper-material/paper-material.html">
 
     <!-- POLYMER CUSTOM WEB-COMPONENTS -->
     <link rel="import" href="../src/wcs/multi-list-box.html">
+    <link rel="import" href="../src/wcs/data-table.html">
 
     <style is="custom-style">
         paper-progress {
@@ -29,22 +31,13 @@
             border: 1px solid black;
         }
 
-        paper-listbox.multilist {
-            width: 100px;
+        .flex-horizontal {
+            @apply(--layout-horizontal);
+        }
+        .flexchild {
+            @apply(--layout-flex);
         }
 
-        paper-listbox.multilist paper-item {
-            --paper-item-focused: {
-                /*background: var(--paper-amber-500);*/
-                /*font-weight: bold;*/
-            };
-            --paper-item-focused-before: {
-                 opacity: 0;
-            };
-            --paper-item-selected: {
-                 background: var(--paper-amber-500);
-            };
-        }
     </style>
 </head>
 <body>
@@ -95,12 +88,15 @@
         </tbody>
     </table>
 
-    <paper-listbox id="listboxOfFields" class="multilist" multi>
-        <paper-item class="fancy">Item 1</paper-item>
-        <paper-item class="fancy">Item 2</paper-item>
-    </paper-listbox>
-
-    <multi-list-box is="listOfFields"></multi-list-box>
+    <div class="container flex-horizontal">
+        <div>
+            <paper-material elevation="2">
+            <h3>Fields</h3><multi-list-box id="listOfFields"></multi-list-box>
+            </paper-material>
+        </div>
+        <div class="flexchild"><data-table id="dataTable"></data-table></div>
+        <div></div>
+    </div>
 
     <script type="text/javascript">
 
@@ -140,31 +136,50 @@
             var types = processingResult.types;
 
             //Create the header table.
-            var trHeader = document.getElementById('trHeader');
+            /*var trHeader = document.getElementById('trHeader');
             ArrayUtils.IteratorOverKeys(types, function(field) {
                 var ntd = document.createElement("th");
                 ntd.innerHTML = field.name;
                 trHeader.appendChild(ntd);
-            });
-
-            //List Of Fields: fills the list with the dataset field names.
-            /*var wcFieldsList = document.querySelector('#listboxOfFields');
-            ArrayUtils.IteratorOverKeys(types, function(field) {
-                var npi = document.createElement('paper-item'); //npi stands for new paper-item.
-                npi.appendChild(document.createTextNode(field.name));
-                Polymer.dom(wcFieldsList).appendChild(npi);
             });*/
 
-            var wcFieldsList = document.querySelector('#');
 
+            //LIST-BOX Of Fields: fills the list with the dataset field names.
+            var arrFields = [];
+            ArrayUtils.IteratorOverKeys(types, function(field) {
+                var item = {};
+                var splitted = field.name.split(',');
+                item.name = splitted[splitted.length - 1];
+                item.description = field.name + " (type: " + field.type + ", #items: " + field.numOfItems + ")";
+                item.id = "id_" + arrFields.length;
+                arrFields.push(item);
+                //debugger;
+            });
+            var wcFieldsList = document.querySelector('#listOfFields');
+            wcFieldsList.fields = arrFields;
 
-            debugger;
-            var trHeaderType = document.getElementById('trHeaderType');
+            //TABLE OF DATA: every time the user clicks on an item, it updates the table.
+            var wcDataTable = document.querySelector('#dataTable');
+            wcFieldsList.addEventListener('selected-item', function(evt) {
+                console.log("event");
+                var _headers = [];
+                var _fields = [];
+
+                evt.detail.fields.forEach(function(field) {
+                    var hasSelectedField = field.hasOwnProperty('selected');
+                    console.log(hasSelectedField);
+                    if (hasSelectedField && field.selected == true)
+                        _headers.push(field.name);
+                });
+                wcDataTable.headers = _headers;
+            });
+
+            /*var trHeaderType = document.getElementById('trHeaderType');
             ArrayUtils.IteratorOverKeys(types, function(field){
                 var ntd = document.createElement("th");
                 ntd.innerHTML = field.type + " (" + Math.round(field.typeConfidence * 100 * 100) / 100 + "%)";
                 trHeaderType.appendChild(ntd);
-            });
+            });*/
 
             var processingResults = _converter.convert(processingResult);
 
@@ -172,11 +187,6 @@
             var barHomogeneity = document.getElementById("barHomogeneity");
             barHomogeneity.setAttribute("value", percentage);
             document.getElementById("barHomogeneityValue").innerHTML = Math.round(percentage*100)/100 + "%";
-
-            /*var percentage = processingResult.qualityIndex.notNullValues*100;
-            var barConsistency = document.getElementById("barNotNull");
-            barConsistency.setAttribute("value", percentage);
-            document.getElementById("barNotNullValues").innerHTML = Math.round(percentage*100)/100 + "%";*/
 
             var percentage = processingResult.qualityIndex.errors*100;
             var barConsistency = document.getElementById("barErrors");

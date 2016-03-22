@@ -1,0 +1,90 @@
+<!--
+  -- data-table-pager v0.2 - 2016/03/22
+  -->
+
+<!-- Polymer libraries -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!-- JQuery -->
+<script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+
+<!-- Semantic UI -->
+<link rel="stylesheet" type="text/css" href="../../bower_components/semantic/dist/semantic.css">
+<script src="../../bower_components/semantic/dist/semantic.min.js"></script>
+
+<!-- WEB COMPONENT SRC -->
+<dom-module is="data-table-pager">
+    <template>
+        <div class="ui right floated pagination menu">
+            <a id="pagerleftarrow" class="icon item" on-click="goPrevPage">
+                <i class="left chevron icon"></i>
+            </a>
+
+            <span id="pageLabel" class="item">{{label}}</span>
+
+            <a id="pagerrightarrow" class="icon item" on-click="goNextPage">
+                <i class="right chevron icon"></i>
+            </a>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: "data-table-pager",
+
+            ready: function() { },
+
+            properties: {
+                totItems: { type: Number, value: 0 /*, observer: 'totItemsChanged'*/ },
+                itemsPerPage: { type: Number, value: 5 /*, observer: 'itemsPerPageChanged'*/  },
+                curPage: { type: Number, value: 1 /*, observer: 'curPageChanged'*/ },
+                label: { type: String, computed: 'computeLabel(totItems, itemsPerPage, curPage)'},
+                showPageLabel: { type: Boolean, value: false,  observer: 'showPageLabelChanged' }
+            },
+
+            observers: [
+                'updateArrows(totItems, itemsPerPage, curPage)'
+            ],
+
+            computeLabel: function(totItems, itemsPerPage, curPage) {
+                var _lowerBound = (curPage - 1) * itemsPerPage + 1;
+                var _upperBound = curPage * itemsPerPage;
+                if (_upperBound > totItems) _upperBound = totItems;
+                return  _lowerBound + '-' + _upperBound + ' di ' + this.totItems;
+            },
+
+            showPageLabelChanged: function() {
+                var displayValue = this.showPageLabel ? 'block' : 'none';
+                $(this.$.pageLabel).css('display', displayValue);
+            },
+
+            updateArrows: function(totItems, itemsPerPage, curPage) {
+                if (curPage == 1) $(this.$.pagerleftarrow).addClass("disabled");
+                else $(this.$.pagerleftarrow).removeClass("disabled");
+
+                if (this.isLastPage() == true) $(this.$.pagerrightarrow).addClass("disabled");
+                else $(this.$.pagerrightarrow).removeClass("disabled");
+            },
+
+            isLastPage: function() {
+                var totPages = Math.ceil(this.totItems / this.itemsPerPage);
+                return this.curPage == totPages;
+            },
+
+            /**
+             **  GUI User Driven Events
+             **/
+
+            goPrevPage: function() {
+                if (!$(this.$.pagerleftarrow).hasClass("disabled"))
+                    this.fire('data-table-pager-go-to-event', this.curPage - 1 );
+            },
+
+            goNextPage: function() {
+                if (!$(this.$.pagerrightarrow).hasClass("disabled"))
+                    this.fire('data-table-pager-go-to-event', this.curPage + 1 );
+            }
+        });
+    </script>
+
+</dom-module>

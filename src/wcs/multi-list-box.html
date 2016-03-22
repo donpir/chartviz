@@ -7,19 +7,17 @@
 <dom-module id="multi-list-box">
     <template>
         <paper-listbox id="listboxOfFields" class="multilist" multi>
-            <!--<paper-item class="fancy">Item 1</paper-item>
-            <paper-item class="fancy">Item 2</paper-item>-->
 
             <template is="dom-repeat" items="{{fields}}">
-                <paper-item id="{{item.id}}">{{item.name}}</paper-item>
-                <paper-tooltip for="{{item.id}}" offset="2" animation-delay="0">{{item.description}}</paper-tooltip>
+                <paper-item id="{{item.id}}" index="{{index}}" toggles>{{item.name}}</paper-item>
+                <paper-tooltip for="{{item.id}}" position="right" animation-delay="0">{{item.description}}</paper-tooltip>
             </template>
 
         </paper-listbox>
 
         <style is="custom-style">
             paper-listbox.multilist {
-                width: 100px;
+                width: 200px;
             }
 
             paper-listbox.multilist paper-item {
@@ -33,6 +31,8 @@
                 --paper-item-selected: {
                      background: var(--paper-amber-500);
                  };
+                --paper-item-min-height: 12px;
+                cursor: pointer;
             }
         </style>
     </template>
@@ -41,13 +41,21 @@
             is: "multi-list-box",
 
             properties: {
-                fields: { type: Array, value: function() {
-                    return [ {id: "itm1", name: "age", description: "The user age"},
-                             {id: "itm2", name: "weight", description: "The user weight" } ];
-                }}
+                fields: { type: Array, value: [], notify: true}
+            },
+
+            listeners: {
+                'iron-select': '_selectedItem',
+                'iron-deselect': '_selectedItem'
+            },
+
+            _selectedItem: function(evt) {
+                var idx = evt.detail.item.index;
+                var hasSelectedKey = this.fields[idx].hasOwnProperty('selected'); //'selected' in this.fields[idx];
+                this.fields[idx].selected = hasSelectedKey ? !this.fields[idx].selected : true;
+                this.fire('selected-item', { fields: this.fields });
             }
 
         });
-
     </script>
 </dom-module>
