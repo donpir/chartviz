@@ -1,0 +1,107 @@
+<!-- POLYMER BASE DEPENDENCY -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<!--<script type="text/javascript" src="../bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>-->
+
+<!-- POLYMER WEB-COMPONENTS -->
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+
+<!-- CUSTOM WEB-COMPONENTS -->
+<link rel="import" href="wcs/data-table.html">
+<link rel="import" href="wcs/data-table-pager.html">
+<link rel="import" href="wcs/multi-list-box.html">
+
+<!--
+
+    Usage:
+
+-->
+<dom-module is="chart-wizard">
+    <template>
+
+        <div class="container flex-horizontal">
+            <div>
+                <paper-material elevation="2">
+                    <h3>Fields</h3><multi-list-box id="listOfFields"></multi-list-box>
+                </paper-material>
+            </div>
+            <div class="flexchild">
+                <paper-tabs selected="{{selectedTab}}">
+                    <paper-tab>Table</paper-tab>
+                    <paper-tab>Visualisation</paper-tab>
+                </paper-tabs>
+                <iron-pages selected="{{selectedTab}}">
+                    <div><data-table id="dataTable" show-pager></data-table></div>
+                    <div>Page 2</div>
+                </iron-pages>
+            </div>
+            <div></div>
+        </div>
+
+        <style is="custom-style">
+            .flex-horizontal {
+                @apply(--layout-horizontal);
+            }
+            .flexchild {
+                @apply(--layout-flex);
+            }
+
+            --paper-tabs-selection-bar-color: --
+        </style>
+    </template>
+    <script>
+        Polymer({
+            is: "chart-wizard",
+
+            properties: {
+                fields: { type: Array, value: [], observer: '_datasetChanged' },
+                dataset: { type: Object, value: undefined, observer: '_datasetChanged' },
+
+                selectedTab: { type: Number, value: 0 }
+            },
+
+            _datasetChanged: function() {
+                if (typeof this.fields == 'undefined') return;
+                if (typeof this.dataset == 'undefined') return;
+
+                //LIST-BOX Of Fields: fills the list with the dataset field names.
+                var arrFields = [];
+                var wcFieldsList = this.$.listOfFields;
+                ArrayUtils.IteratorOverKeys(this.fields, function(field) {
+                    var item = {};
+                    var splitted = field.name.split(',');
+                    item.name = splitted[splitted.length - 1];
+                    item.description = field.name + " (type: " + field.type + ", #items: " + field.numOfItems + ")";
+                    item.id = "id_" + arrFields.length;
+                    arrFields.push(item);
+                });
+                wcFieldsList.fields = arrFields;
+
+                //TABLE OF DATA: every time the user clicks on an item, it updates the table.
+                var _this = this;
+                var wcDataTable = this.$.dataTable;
+                wcFieldsList.addEventListener('selected-item', function(evt) {
+                    var _headers = [];
+                    var _fields = [];
+
+                    evt.detail.selectedFields.forEach(function (field) {
+                        _headers.push(field.name);
+                        _fields.push(field.name)
+                    });
+                    wcDataTable.headers = _headers;
+                    wcDataTable.fields = _fields;
+
+                    //Extract the data and creates the data structure for the data table.
+                    var _data = { data: _this.dataset };
+                    wcDataTable.response = _data;
+                });
+
+                //console.log("dataset change");
+                //debugger;
+            }
+
+        });
+    </script>
+</dom-module>

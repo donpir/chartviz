@@ -15,13 +15,17 @@
 
     <!-- POLYMER WEB-COMPONENTS -->
     <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
-    <link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+    <!--<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
     <link rel="import" href="../bower_components/paper-item/paper-item.html">
     <link rel="import" href="../bower_components/paper-material/paper-material.html">
+    <link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
+    <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+    <link rel="import" href="../bower_components/iron-pages/iron-pages.html">-->
 
     <!-- POLYMER CUSTOM WEB-COMPONENTS -->
-    <link rel="import" href="../src/wcs/multi-list-box.html">
-    <link rel="import" href="../src/wcs/data-table.html">
+    <!--<link rel="import" href="../src/wcs/multi-list-box.html">
+    <link rel="import" href="../src/wcs/data-table.html">-->
+    <link rel="import" href="../src/chart-wizard.html">
 
     <style is="custom-style">
         paper-progress {
@@ -31,13 +35,12 @@
             border: 1px solid black;
         }
 
-        .flex-horizontal {
+        /*.flex-horizontal {
             @apply(--layout-horizontal);
         }
         .flexchild {
             @apply(--layout-flex);
-        }
-
+        }*/
     </style>
 </head>
 <body>
@@ -79,15 +82,26 @@
         </tbody>
     </table>
 
-    <div class="container flex-horizontal">
+    <!--<div class="container flex-horizontal">
         <div>
             <paper-material elevation="2">
-            <h3>Fields</h3><multi-list-box id="listOfFields"></multi-list-box>
+                <h3>Fields</h3><multi-list-box id="listOfFields"></multi-list-box>
             </paper-material>
         </div>
-        <div class="flexchild"><data-table id="dataTable"></data-table></div>
+        <div class="flexchild">
+            <paper-tabs selected="{{selectedTab}}">
+                <paper-tab>Table</paper-tab>
+                <paper-tab>Chart</paper-tab>
+            </paper-tabs>
+            <iron-pages selected="{{selectedTab}}">
+                <div><data-table id="dataTable" show-pager></data-table></div>
+                <div>Page 2</div>
+            </iron-pages>
+        </div>
         <div></div>
-    </div>
+    </div>-->
+
+    <chart-wizard id="wcChartWizard"></chart-wizard>
 
     <script type="text/javascript">
 
@@ -107,11 +121,11 @@
         };//EndFunction.
 
         function btnLoad_OnClick() {
-        //Take the url from the input text.
-        var valDatasetUrl = document.getElementById('txtDatasetUrl').value;
+            //Take the url from the input text.
+            var valDatasetUrl = document.getElementById('txtDatasetUrl').value;
 
-        //Call Ajax to load the dataset content.
-        httpGetAsync(valDatasetUrl, update);
+            //Call Ajax to load the dataset content.
+            httpGetAsync(valDatasetUrl, update);
         };//EndFunction.
 
         function update(csvContent) {
@@ -126,47 +140,6 @@
             var processingResult = _converter.inferJsonDataType(jsonDataset, path);
             var types = processingResult.types;
 
-            //LIST-BOX Of Fields: fills the list with the dataset field names.
-            var arrFields = [];
-            ArrayUtils.IteratorOverKeys(types, function(field) {
-                var item = {};
-                var splitted = field.name.split(',');
-                item.name = splitted[splitted.length - 1];
-                item.description = field.name + " (type: " + field.type + ", #items: " + field.numOfItems + ")";
-                item.id = "id_" + arrFields.length;
-                arrFields.push(item);
-                //debugger;
-            });
-            var wcFieldsList = document.querySelector('#listOfFields');
-            wcFieldsList.fields = arrFields;
-
-            //TABLE OF DATA: every time the user clicks on an item, it updates the table.
-            var _this = this;
-            var wcDataTable = document.querySelector('#dataTable');
-            wcFieldsList.addEventListener('selected-item', function(evt) {
-                var _headers = [];
-                var _fields = [];
-                var _dataset = jsonDataset;
-
-                /*evt.detail.fields.forEach(function(field) {
-                    var hasSelectedField = field.hasOwnProperty('selected');
-                    if (hasSelectedField && field.selected == true) {
-                        _headers.push(field.name);
-                        _fields.push(field.name)
-                    }
-                });*/
-
-                evt.detail.selectedFields.forEach(function(field) {
-                    _headers.push(field.name);
-                    _fields.push(field.name)
-                });
-                wcDataTable.headers = _headers;
-                wcDataTable.headers = _fields;
-
-                //Extract the data and creates the data structure for the data table.
-                //debugger;
-            });
-
             //PROGRESS BAR.
             var processingResults = _converter.convert(processingResult);
 
@@ -179,6 +152,44 @@
             var barConsistency = document.getElementById("barErrors");
             barConsistency.setAttribute("value", percentage);
             document.getElementById("barErrorsValues").innerHTML = Math.round(percentage*100)/100 + "%";
+
+            //ChartWizard WC.
+            var wcChartWizard = document.querySelector("#wcChartWizard");
+            wcChartWizard.dataset = processingResult.dataset.records;
+            wcChartWizard.fields = processingResult.types;
+
+            //LIST-BOX Of Fields: fills the list with the dataset field names.
+            /*var arrFields = [];
+            ArrayUtils.IteratorOverKeys(types, function(field) {
+                var item = {};
+                var splitted = field.name.split(',');
+                item.name = splitted[splitted.length - 1];
+                item.description = field.name + " (type: " + field.type + ", #items: " + field.numOfItems + ")";
+                item.id = "id_" + arrFields.length;
+                arrFields.push(item);
+            });
+            var wcFieldsList = document.querySelector('#listOfFields');
+            wcFieldsList.fields = arrFields;
+
+            //TABLE OF DATA: every time the user clicks on an item, it updates the table.
+            var _this = this;
+            var wcDataTable = document.querySelector('#dataTable');
+            wcFieldsList.addEventListener('selected-item', function(evt) {
+                var _headers = [];
+                var _fields = [];
+                var _dataset = jsonDataset;
+
+                evt.detail.selectedFields.forEach(function(field) {
+                    _headers.push(field.name);
+                    _fields.push(field.name)
+                });
+                wcDataTable.headers = _headers;
+                wcDataTable.fields = _fields;
+
+                //Extract the data and creates the data structure for the data table.
+                var _data = { data: _dataset.records };
+                wcDataTable.response = _data;
+            });*/
 
         }//EndFunction.
     </script>
