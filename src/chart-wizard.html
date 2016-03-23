@@ -24,7 +24,10 @@
         <div class="container flex-horizontal">
             <div>
                 <paper-material elevation="2">
-                    <h3>Fields</h3><multi-list-box id="listOfFields"></multi-list-box>
+                    <h3>Fields</h3>
+                    <multi-list-box id="listOfFields"></multi-list-box>
+                    <h6>Dataset Quality Index</h6>
+                    <span id="spDatasetQuality"></span>
                 </paper-material>
             </div>
             <div class="flexchild">
@@ -48,7 +51,13 @@
                 @apply(--layout-flex);
             }
 
-            --paper-tabs-selection-bar-color: --
+            paper-tabs {
+                --paper-tabs-selection-bar-color: var(--paper-amber-500);
+            }
+
+            paper-tab {
+                --paper-tab-ink: var(--paper-amber-100);
+            }
         </style>
     </template>
     <script>

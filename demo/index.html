@@ -15,17 +15,16 @@
 
     <!-- POLYMER WEB-COMPONENTS -->
     <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
-    <!--<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
-    <link rel="import" href="../bower_components/paper-item/paper-item.html">
-    <link rel="import" href="../bower_components/paper-material/paper-material.html">
-    <link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
-    <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
-    <link rel="import" href="../bower_components/iron-pages/iron-pages.html">-->
 
     <!-- POLYMER CUSTOM WEB-COMPONENTS -->
-    <!--<link rel="import" href="../src/wcs/multi-list-box.html">
-    <link rel="import" href="../src/wcs/data-table.html">-->
     <link rel="import" href="../src/chart-wizard.html">
+
+    <!-- D3 Library -->
+    <script type="text/javascript" src="../bower_components/d3/d3.min.js" charset="utf-8"></script>
+
+    <!-- C3js Library -->
+    <link type="text/css" rel="stylesheet" href="../bower_components/c3/c3.min.css">
+    <script type="text/javascript" src="../bower_components/c3/c3.min.js"></script>
 
     <style is="custom-style">
         paper-progress {
@@ -34,13 +33,6 @@
             --paper-progress-height: 20px;
             border: 1px solid black;
         }
-
-        /*.flex-horizontal {
-            @apply(--layout-horizontal);
-        }
-        .flexchild {
-            @apply(--layout-flex);
-        }*/
     </style>
 </head>
 <body>
@@ -52,54 +44,19 @@
 
     <br/>
 
-    <table border="0">
-    <tr>
-        <td>Data homogeneity:</td>
-        <td><paper-progress id="barHomogeneity" value="0">sbiricuda</paper-progress></td>
-        <td id="barHomogeneityValue"></td>
-    </tr>
+    <!--<table border="0">-->
+    <!--<tr>-->
+        <!--<td>Data homogeneity:</td>-->
+        <!--<td><paper-progress id="barHomogeneity" value="0">sbiricuda</paper-progress></td>-->
+        <!--<td id="barHomogeneityValue"></td>-->
+    <!--</tr>-->
 
-    <tr>
-        <td>Dataset Consistent Values:</td>
-        <td><paper-progress id="barErrors" value="0">sbiricuda</paper-progress></td>
-        <td id="barErrorsValues"></td>
-    </tr>
-    </table>
-
-
-    <br>
-    <table border=1>
-        <thead>
-        <tr id="trHeader">
-
-        </tr>
-        <tr id="trHeaderType">
-
-        </tr>
-        </thead>
-        <tbody id="tbody">
-
-        </tbody>
-    </table>
-
-    <!--<div class="container flex-horizontal">
-        <div>
-            <paper-material elevation="2">
-                <h3>Fields</h3><multi-list-box id="listOfFields"></multi-list-box>
-            </paper-material>
-        </div>
-        <div class="flexchild">
-            <paper-tabs selected="{{selectedTab}}">
-                <paper-tab>Table</paper-tab>
-                <paper-tab>Chart</paper-tab>
-            </paper-tabs>
-            <iron-pages selected="{{selectedTab}}">
-                <div><data-table id="dataTable" show-pager></data-table></div>
-                <div>Page 2</div>
-            </iron-pages>
-        </div>
-        <div></div>
-    </div>-->
+    <!--<tr>-->
+        <!--<td>Dataset Consistent Values:</td>-->
+        <!--<td><paper-progress id="barErrors" value="0">sbiricuda</paper-progress></td>-->
+        <!--<td id="barErrorsValues"></td>-->
+    <!--</tr>-->
+    <!--</table>-->
 
     <chart-wizard id="wcChartWizard"></chart-wizard>
 
@@ -139,24 +96,43 @@
             var path = [ "records", "*" ];
             var processingResult = _converter.inferJsonDataType(jsonDataset, path);
             var types = processingResult.types;
-
-            //PROGRESS BAR.
             var processingResults = _converter.convert(processingResult);
 
-            var percentage = processingResult.qualityIndex.homogeneity*100;
+            //PROGRESS BAR.
+            /*var percentage = processingResult.qualityIndex.homogeneity*100;
             var barHomogeneity = document.getElementById("barHomogeneity");
             barHomogeneity.setAttribute("value", percentage);
             document.getElementById("barHomogeneityValue").innerHTML = Math.round(percentage*100)/100 + "%";
-
             var percentage = processingResult.qualityIndex.errors*100;
             var barConsistency = document.getElementById("barErrors");
             barConsistency.setAttribute("value", percentage);
-            document.getElementById("barErrorsValues").innerHTML = Math.round(percentage*100)/100 + "%";
+            document.getElementById("barErrorsValues").innerHTML = Math.round(percentage*100)/100 + "%";*/
 
             //ChartWizard WC.
             var wcChartWizard = document.querySelector("#wcChartWizard");
             wcChartWizard.dataset = processingResult.dataset.records;
             wcChartWizard.fields = processingResult.types;
+
+            //QUALITY INDEX CHART.
+            var percentage = processingResult.qualityIndex.homogeneity*100;
+            var datasetQualityIndex = Math.round(percentage*100)/100;
+            var chart = c3.generate({
+                bindto: '#spDatasetQuality',
+                data: {
+                    columns: [
+                        ['data', datasetQualityIndex]
+                    ],
+                    type: 'gauge'
+                },
+                gauge: { },
+                color: {
+                    pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'], // the three color levels for the percentage values.
+                    threshold: {
+                        values: [30, 60, 90, 100]
+                    }
+                }
+            });
+
 
             //LIST-BOX Of Fields: fills the list with the dataset field names.
             /*var arrFields = [];
