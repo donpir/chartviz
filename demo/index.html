@@ -39,7 +39,9 @@
     <h3>Dataset Visualizer</h3>
 
     Dataset URL: <input id="txtDatasetUrl" type="text" style="width: 75%;"
-            value="http://ckan.routetopa.eu/dataset/fce7b89c-4c36-47c4-a486-7df5307a884e/resource/1b675fb7-8c9a-46d0-8f80-3e28afe4f4b5/download/litterwardennonulls.csv">
+            value="http://vmdatagov01.deri.ie:8080/dataset/9a5f07fe-96f0-4925-883f-b73225589e84/resource/3be469a0-f0f5-4f5c-a1e2-5ed7838ddb12/download/roadmaintenanceexperimentalfinal-v3.csv"
+            >
+
     <input id="btnLoad" type="button" value="Load dataset" onclick="btnLoad_OnClick();">
 
     <br/>
@@ -110,8 +112,8 @@
 
             //ChartWizard WC.
             var wcChartWizard = document.querySelector("#wcChartWizard");
-            wcChartWizard.dataset = processingResult.dataset.records;
-            wcChartWizard.fields = processingResult.types;
+            wcChartWizard.dataset = processingResults.dataset.records;
+            wcChartWizard.fields = processingResults.types;
 
             //QUALITY INDEX CHART.
             var percentage = processingResult.qualityIndex.homogeneity*100;
@@ -127,45 +129,9 @@
                 gauge: { },
                 color: {
                     pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'], // the three color levels for the percentage values.
-                    threshold: {
-                        values: [30, 60, 90, 100]
-                    }
+                    threshold: { values: [30, 60, 90, 100] }
                 }
             });
-
-
-            //LIST-BOX Of Fields: fills the list with the dataset field names.
-            /*var arrFields = [];
-            ArrayUtils.IteratorOverKeys(types, function(field) {
-                var item = {};
-                var splitted = field.name.split(',');
-                item.name = splitted[splitted.length - 1];
-                item.description = field.name + " (type: " + field.type + ", #items: " + field.numOfItems + ")";
-                item.id = "id_" + arrFields.length;
-                arrFields.push(item);
-            });
-            var wcFieldsList = document.querySelector('#listOfFields');
-            wcFieldsList.fields = arrFields;
-
-            //TABLE OF DATA: every time the user clicks on an item, it updates the table.
-            var _this = this;
-            var wcDataTable = document.querySelector('#dataTable');
-            wcFieldsList.addEventListener('selected-item', function(evt) {
-                var _headers = [];
-                var _fields = [];
-                var _dataset = jsonDataset;
-
-                evt.detail.selectedFields.forEach(function(field) {
-                    _headers.push(field.name);
-                    _fields.push(field.name)
-                });
-                wcDataTable.headers = _headers;
-                wcDataTable.fields = _fields;
-
-                //Extract the data and creates the data structure for the data table.
-                var _data = { data: _dataset.records };
-                wcDataTable.response = _data;
-            });*/
 
         }//EndFunction.
     </script>
