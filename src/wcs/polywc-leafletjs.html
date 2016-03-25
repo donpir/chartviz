@@ -1,0 +1,57 @@
+<!-- POLYMER Library -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module is="polywc-leafletjs">
+    <template>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+
+        <div id="mapid"></div>
+
+        <style is="custom-style">
+            #mapid { height: 400px; width: 600px; }
+        </style>
+
+    </template>
+
+    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+
+    <script>
+        Polymer({
+            is: "polywc-leafletjs",
+
+            properties: {
+                markers: { type: Array, value: [], observer: 'markersChanged' }
+            },
+
+            ready: function () {
+                var contref = this.$.mapid;
+                this.__map = L.map(contref).setView([51.505, -0.09], 13);
+
+                L.Icon.Default.imagePath = '../src/wcs/polywc-leafletjs/images';
+
+                L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                }).addTo(this.__map);
+
+                this.__map._onResize();
+                this.__map.invalidateSize(false);
+                console.log("ready");
+            },
+
+            markersChanged: function (markers) {
+                this.$.__markers = [];
+
+                if (typeof this.__map == 'undefined' ) return;
+
+
+                var marker = L.marker([51.5, -0.09]).addTo(this.__map);
+                //this.$.__markers.push(marker);
+            }//EndFunction.
+
+        });
+
+
+    </script>
+
+</dom-module>
