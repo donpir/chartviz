@@ -13,6 +13,10 @@
 <link rel="import" href="wcs/data-table-pager.html">
 <link rel="import" href="wcs/multi-list-box.html">
 
+<!-- JS Library -->
+<script type="text/javascript" src="VizRecommender.js"></script>
+<script type="text/javascript" src="vizlibs/C3JSTypeMatch.js"></script>
+
 <!--
 
     Usage:
@@ -23,22 +27,30 @@
 
         <div class="container flex-horizontal">
             <div>
-                <paper-material elevation="2">
-                    <h3>Fields</h3>
-                    <multi-list-box id="listOfFields"></multi-list-box>
+                <paper-material elevation="2" style="margin-top: 50px;">
+                    <h3 style="text-align: center;">Fields</h3>
+                    <multi-list-box id="listOfFields" multi></multi-list-box>
                     <h6>Dataset Quality Index</h6>
                     <span id="spDatasetQuality"></span>
                 </paper-material>
             </div>
             <div class="flexchild">
-                <paper-tabs selected="{{selectedTab}}">
-                    <paper-tab>Table</paper-tab>
-                    <paper-tab>Visualisation</paper-tab>
-                </paper-tabs>
-                <iron-pages selected="{{selectedTab}}">
-                    <div><data-table id="dataTable" show-pager></data-table></div>
-                    <div>Page 2</div>
-                </iron-pages>
+                <paper-material elevation="2" style="margin: 2px;">
+                    <paper-tabs selected="{{selectedTab}}">
+                        <paper-tab>Table</paper-tab>
+                        <paper-tab>Visualisation</paper-tab>
+                    </paper-tabs>
+                    <iron-pages selected="{{selectedTab}}">
+                        <div><data-table id="dataTable" show-pager></data-table></div>
+                        <div>
+                            <div id="chartviz"></div>
+                            <div>
+                                <h4>Equivalent Visualisations</h4>
+                                <multi-list-box id="listOfEquivalentVis"></multi-list-box>
+                            </div>
+                        </div>
+                    </iron-pages>
+                </paper-material>
             </div>
             <div></div>
         </div>
@@ -49,6 +61,10 @@
             }
             .flexchild {
                 @apply(--layout-flex);
+            }
+
+            #listOfEquivalentVis {
+
             }
 
             paper-tabs {
@@ -71,12 +87,25 @@
                 selectedTab: { type: Number, value: 0 }
             },
 
+            ready: function() {
+                var $wcListOfFields = this.$.listOfFields;
+                var _this = this;
+                this.$.listOfEquivalentVis.addEventListener('selected-item', function(evt) {
+                    //debugger;
+                    _this._updateChart(evt.detail.selectedFields[0]);
+                });
+            },
+
             _datasetChanged: function() {
                 if (typeof this.fields == 'undefined') return;
                 if (typeof this.dataset == 'undefined') return;
 
                 //LIST-BOX Of Fields: fills the list with the dataset field names.
-                var arrFields = [];
+                var wcFieldsList = this.$.listOfFields;
+                wcFieldsList.fields = this.fields;
+
+                //LIST-BOX Of Fields: fills the list with the dataset field names.
+                /*var arrFields = [];
                 var wcFieldsList = this.$.listOfFields;
                 ArrayUtils.IteratorOverKeys(this.fields, function(field) {
                     var item = {};
@@ -86,18 +115,19 @@
                     item.id = "id_" + arrFields.length;
                     arrFields.push(item);
                 });
-                wcFieldsList.fields = arrFields;
+                wcFieldsList.fields = arrFields;*/
 
                 //TABLE OF DATA: every time the user clicks on an item, it updates the table.
                 var _this = this;
                 var wcDataTable = this.$.dataTable;
+                var $wcListOfFields = this.$.listOfFields;
                 wcFieldsList.addEventListener('selected-item', function(evt) {
                     var _headers = [];
                     var _fields = [];
 
                     evt.detail.selectedFields.forEach(function (field) {
                         _headers.push(field.name);
-                        _fields.push(field.name)
+                        _fields.push(field.name);
                     });
                     wcDataTable.headers = _headers;
                     wcDataTable.fields = _fields;
@@ -105,11 +135,90 @@
                     //Extract the data and creates the data structure for the data table.
                     var _data = { data: _this.dataset };
                     wcDataTable.response = _data;
+
+                    //Visualisation recommendation.
+                    var recommendedViz = VizRecommender.equivalent($wcListOfFields.selectedFields);
+                    if (recommendedViz.success == false) {
+                        document.querySelector("#chartviz").innerHTML = "";
+                    } else {
+
+                        _this._updateChart();
+
+                    }
+                });
+            },
+
+            /*_updateChartBis: function(suggestedVis) {
+                var _this = this;
+                var chartType = C3JSTypeMatch.typeOf(suggestedVis);
+
+                //Prepares columns data.
+                var columns = [];
+                var $wcListOfFields = this.$.listOfFields;
+                $wcListOfFields.selectedFields.forEach(function (field) {
+                    var column = _this._extractColumn(_this.dataset, field.name);
+                    column.unshift(field.name);
+                    columns.push(column);
                 });
 
-                //console.log("dataset change");
-                //debugger;
-            }
+                //Shows the visualisations.
+                this._createViz(columns, chartType);
+
+                //Updates the equivalent chart.
+                this.$.listOfEquivalentVis.fields = recommendedViz.viz;
+            },*/
+
+            _updateChart: function (preSelectedVisType) {
+                //Visualisation recommendation.
+                var _this = this;
+                var $wcListOfFields = this.$.listOfFields;
+                var recommendedViz = VizRecommender.equivalent($wcListOfFields.selectedFields, preSelectedVisType);
+                if (recommendedViz.success == false) {
+                    document.querySelector("#chartviz").innerHTML = "";
+                } else {
+
+                    var chartType = C3JSTypeMatch.typeOf(recommendedViz.viz[0]);
+                    if (typeof preSelectedVisType !== 'undefined')
+                        chartType = C3JSTypeMatch.typeOf(preSelectedVisType);
+
+
+                    var columns = [];
+                    $wcListOfFields.selectedFields.forEach(function (field) {
+                        var column = _this._extractColumn(_this.dataset, field.name);
+                        column.unshift(field.name);
+                        columns.push(column);
+                    });
+
+                    this._createViz(columns, chartType);
+
+                    this.$.listOfEquivalentVis.fields = recommendedViz.viz;
+                }
+            },
+
+            _extractColumn: function (dataset, colKey) {
+                var col = [];
+
+                for (var i=0; i<dataset.length; i++) {
+                    var row = dataset[i];
+
+                    ArrayUtils.IteratorOverKeys(row, function(cell, key) {
+                        if (key === colKey)
+                            col.push(cell);
+                    });
+                }//EndFor.
+
+                return col;
+            },
+
+            _createViz: function (columns, chartType) {
+                var chart = c3.generate({
+                    bindto: '#chartviz',
+                    data: {
+                        columns: columns,
+                        type: chartType
+                    }
+                });
+            }//EndFunction.
 
         });
     </script>

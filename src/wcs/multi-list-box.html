@@ -41,7 +41,7 @@
 -->
 <dom-module is="multi-list-box">
     <template>
-        <paper-listbox id="listboxOfFields" class="multilist" multi>
+        <paper-listbox id="listboxOfFields" class="multilist">
 
             <template is="dom-repeat" items="{{fields}}">
                 <paper-item id="{{item.id}}" index="{{index}}" toggles>{{item.name}}</paper-item>
@@ -51,6 +51,15 @@
         </paper-listbox>
 
         <style is="custom-style">
+
+     		/*
+     		 * This style applies only when the tag <multi-list-box> has the attribute "multi".
+     		 */
+            /*:host([multi]) paper-listbox {
+                @apply(multi);
+                @apply(--multi-list-box-multi);
+            }*/
+
             paper-listbox.multilist {
                 width: 200px;
             }
@@ -81,12 +90,18 @@
 
             properties: {
                 fields: { type: Array, value: [], notify: true},
-                selectedFields: { type: Array, value: [] }
+                selectedFields: { type: Array, value: [] },
+
+                multi: { type: Boolean, value: false, observer: 'multiChanged' }
             },
 
             listeners: {
                 'iron-select': '_selectedItem',
                 'iron-deselect': '_selectedItem'
+            },
+
+            multiChanged: function (multi) {
+                this.$.listboxOfFields.multi = multi;
             },
 
             _selectedItem: function(evt) {
@@ -95,6 +110,8 @@
                 this.fields[idx].selected = hasSelectedKey ? !this.fields[idx].selected : true;
 
                 //TODO: check whether the field has a property 'id'.
+                if (!this.multi)
+                    this.selectedFields = [];
 
                 if (this.fields[idx].selected) //Add the field to the selected fields.
                     this.selectedFields.push(this.fields[idx]);
@@ -109,6 +126,26 @@
                 }
 
                 this.fire('selected-item', { fields: this.fields, selectedFields: this.selectedFields });
+
+                /*var idx = evt.detail.item.index;
+                var hasSelectedKey = this.$.fields[idx].hasOwnProperty('selected'); //'selected' in this.fields[idx];
+                this.$.fields[idx].selected = hasSelectedKey ? !this.$.fields[idx].selected : true;
+
+                //TODO: check whether the field has a property 'id'.
+
+                if (this.$.fields[idx].selected) //Add the field to the selected fields.
+                    this.$.selectedFields.push(this.$.fields[idx]);
+                else {
+                    //It removes the item from the array.
+                    var removeIndex = -1;
+                    for (var i=0; i<this.$.selectedFields.length; i++)
+                        if (this.$.selectedFields[i].id == this.$.fields[idx].id)
+                            removeIndex = i;
+                    if (removeIndex >= 0)
+                        this.$.selectedFields.splice(removeIndex, 1);
+                }
+
+                this.fire('selected-item', { fields: this.$.fields, selectedFields: this.$.selectedFields });*/
             }
 
         });

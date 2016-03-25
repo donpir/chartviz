@@ -110,10 +110,20 @@
             barConsistency.setAttribute("value", percentage);
             document.getElementById("barErrorsValues").innerHTML = Math.round(percentage*100)/100 + "%";*/
 
-            //ChartWizard WC.
+            //Prepares the fields for the Chart-Wizard Web-component.
+            var arrFields = [];
+            ArrayUtils.IteratorOverKeys(processingResults.types, function(field) {
+                field.key = field.name;
+                var splitted = field.name.split(',');
+                field.name = splitted[splitted.length - 1];
+                field.description = field.name + " (type: " + field.type + ", #items: " + field.numOfItems + ")";
+                field.id = "id_" + arrFields.length;
+                arrFields.push(field);
+            });
+
             var wcChartWizard = document.querySelector("#wcChartWizard");
             wcChartWizard.dataset = processingResults.dataset.records;
-            wcChartWizard.fields = processingResults.types;
+            wcChartWizard.fields = arrFields;//processingResults.types;
 
             //QUALITY INDEX CHART.
             var percentage = processingResult.qualityIndex.homogeneity*100;
